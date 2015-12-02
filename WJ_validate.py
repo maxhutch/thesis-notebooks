@@ -61,8 +61,8 @@ def load_from_archive(names, arch):
 config = Foo()
 config.names = [
 #    "Wilk/Wilk_kmin_2.5/Wilk_kmin_2.5",
-#    "Wilk/Wilk_kmin_3.5/Wilk_kmin_3.5", 
-    "Wilk/Wilk_kmin_4.5/Wilk_kmin_4.5", 
+    "Wilk/Wilk_kmin_3.5/Wilk_kmin_3.5", 
+#    "Wilk/Wilk_kmin_4.5/Wilk_kmin_4.5", 
 #    "Wilk/Wilk_long/Wilk_long",
 #    "Wilk/Wilk_per/Wilk_per",
 ]
@@ -87,22 +87,34 @@ c, sc, p = load_from_archive(config.names, config.arch_end);
 c.prefetch(sc[:,'w_xy'].full_keys() + sc[:,'z_z'].full_keys() )
 
 
-# In[7]:
+# In[15]:
 
 from IPython.html.widgets import interact, IntSlider
 def plot_profile(frame, index):
     T = sc[:,'w_xy'].keys()[frame]
-    data = sc[T,'w_xy']
-    x = sc[0.0,'z_z'][-data.shape[0]:]
+    data = sc[T,'w_xy'][index,:]
+    x = sc[0.0,'z_z'][-sc[T,'w_xy'].shape[0]:]
 
-    plt.imshow(data)
+    plt.imshow(sc[T,'w_xy'])
     plt.axhline(index, color='k')
     plt.figure()
-    plt.plot(x,data[index,:])
+    plt.plot(x,data[:])
+    plt.xlabel("y")
+    plt.ylabel("w")
     plt.figure()
-    plt.plot(x[:50],data[index,:50])
+    scalex = np.sqrt(np.abs(data[1]/x[1]) * p['viscosity']) / p['viscosity']
+    scaley = 1./np.sqrt(np.abs(data[1]/x[1]) * p['viscosity']) 
+    plt.plot(scalex*x[:50],scaley*data[:50], 'x-')
+    plt.grid(True)
+    plt.xlabel("y+")
+    plt.ylabel("w+")
     plt.figure()
-    plt.plot(x[-50:],data[index,-50:])
+    scalex = np.sqrt(np.abs(data[-1]/(x[-1]-1)) * p['viscosity']) / p['viscosity']
+    scaley = 1./np.sqrt(np.abs(data[-1]/(x[-1]-1)) * p['viscosity']) 
+    plt.plot(scalex*(x[-50:]-1),scaley*data[-50:], 'x-')
+    plt.grid(True)
+    plt.xlabel("y+")
+    plt.ylabel("w+")
 
 interact(plot_profile, 
          frame=(0,64), 
